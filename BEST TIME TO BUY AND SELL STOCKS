@@ -1,0 +1,39 @@
+strategy("New Gate", overlay=true)
+
+calc_on_files = true
+default_qty_type = strategy.percent_of_equity
+default_qty_value = 100
+
+// Calculate EMAs
+ema1 = ta.ema(close, 20)
+ema2 = ta.ema(close, 50)
+ema3 = ta.ema(close, 100)
+ema4 = ta.ema(close, 200)
+
+emahigh = math.max(ema1, ema2, ema3, ema4)
+emamin = math.min(ema1, ema2, ema3, ema4)
+sharePrice = close
+diff = emahigh - emamin
+percentDiff = diff / sharePrice
+
+plot(emahigh, "emahigh", color=color.rgb(251, 195, 64))
+plot(emamin, "emamin", color=color.rgb(64, 179, 251))
+plot(percentDiff)
+
+// Calculate the highest value of high over 200 periods
+high300 = ta.highest(high, 200)
+
+// Check if the price has breached the 200 EMA twice for a buy signal
+buySignal = (close > ema1) and (close > ema2) and (close > ema3) and (close > ema4) and (percentDiff < 0.04)
+
+// Check if the price has fallen below the 200 EMA or breached the highest value for a sell signal
+sellSignal = (close < ema4) or (close < high300)
+
+if buySignal
+    strategy.order("buy", strategy.long)
+else if sellSignal
+    strategy.order("sell", strategy.short)
+else
+    strategy.close("not buy or sell", comment="exit")
+
+--Written by Apoorva Jain
